@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from app.core.config import settings
 from app.bot.dispatcher import start_polling, stop_polling
-
+from app.infra.redis import close_redis
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,6 +13,7 @@ async def lifespan(app: FastAPI):
 
     task.cancel()
     await stop_polling()
+    await close_redis()
 
 
 def create_app() -> FastAPI:
