@@ -1,8 +1,8 @@
 import asyncio
 import json
 import logging
-from celery import shared_task
 
+from app.infra.celery_app import celery_app
 from app.services.openrouter_client import OpenRouterClient
 from app.infra.redis import get_redis
 
@@ -12,7 +12,7 @@ DEFAULT_TTL = 3600
 logger = logging.getLogger(__name__)
 
 
-@shared_task(name="llm_request")
+@celery_app.task(name="llm_request")
 def llm_request(tg_chat_id: int, prompt: str) -> dict:
     """
     Celery задача для обработки LLM запроса.
