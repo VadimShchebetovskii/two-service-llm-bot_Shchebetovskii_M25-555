@@ -15,6 +15,7 @@
 ## Запуск
 ```bash
 docker compose up -d --build
+```
 
 ## Контакты
 
