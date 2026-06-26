@@ -52,7 +52,7 @@ class TestHandlers:
         """Тест: с токеном бот вызывает Celery."""
 
         message = AsyncMock(spec=Message)
-        message.text = "Привет!"
+        message.text = "Hello"
         message.from_user = User(id=1, is_bot=False, first_name="Test")
         message.chat = Chat(id=1, type="private")
         message.answer = AsyncMock()
@@ -62,4 +62,4 @@ class TestHandlers:
 
         await message_handler(message)
 
-        mock_celery.assert_called_once_with(1, "Привет!")
+        mock_celery.assert_called_once_with(1, "Hello")
