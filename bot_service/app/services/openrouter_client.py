@@ -40,4 +40,15 @@ class OpenRouterClient:
                 raise OpenRouterError(f"OpenRouter error: {response.status_code} - {response.text}")
 
             result = response.json()
-            return result["choices"][0]["message"]["content"]
+            
+            choices = result.get("choices", [])
+            if not choices:
+                raise OpenRouterError("Unexpected response: empty choices")
+            
+            message = choices[0].get("message", {})
+            content = message.get("content")
+            
+            if not content:
+                raise OpenRouterError("Unexpected response: empty content")
+            
+            return content
