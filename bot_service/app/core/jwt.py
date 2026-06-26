@@ -4,7 +4,7 @@ from app.core.config import settings
 from app.core.errors import InvalidTokenError, TokenExpiredError
 
 
-def decode_access_token(token: str) -> dict[str, Any]:
+def decode_and_validate(token: str) -> dict[str, Any]:
     """
     Декодирует и валидирует JWT токен.
     

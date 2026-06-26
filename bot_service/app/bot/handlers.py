@@ -5,9 +5,10 @@ from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from app.core.jwt import decode_access_token
+from app.core.jwt import decode_and_validate
 from app.core.errors import InvalidTokenError, TokenExpiredError
 from app.infra.redis import get_redis
+from app.tasks.llm_tasks import llm_request
 
 
 logger = logging.getLogger(__name__)
@@ -41,12 +42,20 @@ async def token_handler(message: types.Message) -> None:
     token = parts[1]
 
     try:
-        decode_access_token(token)
+        decode_and_validate(token)
     except TokenExpiredError:
-        await message.answer("Токен истёк")
+        await message.answer(
+            "Токен истёк.\n\n"
+            "Пройдите авторизацию в Auth Service:\n"
+            "http://localhost:8000/docs"
+        )
         return
     except InvalidTokenError as e:
-        await message.answer(f"Невалидный токен: {e}")
+        await message.answer(
+            f"Невалидный токен: {e}\n\n"
+            "Пройдите авторизацию в Auth Service:\n"
+            "http://localhost:8000/docs"
+        )
         return
 
     try:
@@ -72,24 +81,37 @@ async def message_handler(message: Message) -> None:
         return
 
     if not token:
-        await message.answer("Токен не найден. Отправь /token (jwt)")
+        await message.answer(
+            "Токен не найден.\n\n"
+            "1. Пройдите авторизацию в Auth Service:\n"
+            "   http://localhost:8000/docs\n\n"
+            "2. Отправьте полученный токен боту:\n"
+            "   /token (jwt)"
+        )
         return
 
     # 2. Валидируем токен
     try:
-        decode_access_token(token)
+        decode_and_validate(token)
     except TokenExpiredError:
-        await message.answer("Токен истёк")
+        await message.answer(
+            "Токен истёк.\n\n"
+            "Пройдите авторизацию в Auth Service:\n"
+            "http://localhost:8000/docs"
+        )
         await redis.delete(user_key)
         return
     except InvalidTokenError as e:
-        await message.answer(f"Невалидный токен: {e}")
+        await message.answer(
+            f"Невалидный токен: {e}\n\n"
+            "Пройдите авторизацию в Auth Service:\n"
+            "http://localhost:8000/docs"
+        )
         await redis.delete(user_key)
         return
 
     # 3. Отправляем задачу в Celery
     try:
-        from app.tasks.llm_tasks import llm_request
         task = llm_request.delay(message.chat.id, message.text)
         await message.answer("Запрос принят")
 
@@ -111,4 +133,4 @@ async def message_handler(message: Message) -> None:
 
     except Exception as e:
         logger.error(f"Celery error: {e}")
-        await message.answer("Ошибка отправки запроса")
+        await message.answer(f"Ошибка отправки запроса: {e}")
