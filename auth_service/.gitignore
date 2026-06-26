@@ -11,7 +11,7 @@ wheels/
 .env
 
 # Database
-app.db
+auth.db
 
 # Ruff
 .ruff_cache/
